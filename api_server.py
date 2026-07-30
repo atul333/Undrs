@@ -31,9 +31,13 @@ import logging
 import os
 import secrets
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
+
+from dotenv import load_dotenv
+
+load_dotenv()  # reads .env from current directory
 
 import aiosqlite
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
@@ -44,13 +48,13 @@ from pydantic import AnyHttpUrl, BaseModel
 #  CONFIG
 # ──────────────────────────────────────────────────────────────────────────────
 
-DB_PATH         = "api_server.db"
-ADMIN_SECRET    = os.getenv("ADMIN_SECRET", "change-this-admin-secret")  # protect admin routes
-API_HOST        = "0.0.0.0"
-API_PORT        = 8000
+DB_PATH         = os.getenv("API_DB_PATH", "api_server.db")
+ADMIN_SECRET    = os.getenv("ADMIN_SECRET", "change-this-admin-secret")
+API_HOST        = os.getenv("API_HOST", "0.0.0.0")
+API_PORT        = int(os.getenv("API_PORT", "8000"))
 
 # Default credits given to a newly created API key
-DEFAULT_CREDITS = 100
+DEFAULT_CREDITS = int(os.getenv("DEFAULT_CREDITS", "100"))
 
 # Credit costs per operation (mirrors undresstool.fun pricing)
 CREDIT_COST = {

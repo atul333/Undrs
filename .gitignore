@@ -1,0 +1,17 @@
+# Never commit the real .env — it contains secrets
+.env
+
+# SQLite databases
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/

@@ -13,8 +13,13 @@ Config:
 
 import asyncio
 import logging
+import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+
+from dotenv import load_dotenv
+
+load_dotenv()  # reads .env from the current directory
 
 import aiohttp
 import aiosqlite
@@ -35,17 +40,23 @@ from aiogram.types import (
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  CONFIGURATION  (edit these before running)
+#  CONFIGURATION  (loaded from .env)
 # ──────────────────────────────────────────────────────────────────────────────
 
-BOT_TOKEN: str = "YOUR_TELEGRAM_BOT_TOKEN"
-OWN_API_KEY: str = "udt_your_generated_key_here"   # from: python api_server.py → POST /admin/keys
-OWN_API_URL: str = "http://localhost:8000"          # your api_server.py base URL
-WEBHOOK_BASE_URL: str = "https://your-public-domain.com"  # public HTTPS for undress results
-WEBHOOK_PORT: int = 8888
+BOT_TOKEN: str        = os.getenv("BOT_TOKEN", "")
+OWN_API_KEY: str      = os.getenv("OWN_API_KEY", "")
+OWN_API_URL: str      = os.getenv("OWN_API_URL", "http://localhost:8000")
+WEBHOOK_BASE_URL: str = os.getenv("WEBHOOK_BASE_URL", "http://localhost:8888")
+WEBHOOK_PORT: int     = int(os.getenv("WEBHOOK_PORT", "8888"))
+DB_PATH: str          = os.getenv("BOT_DB_PATH", "undress_jobs.db")
 
-API_BASE = OWN_API_URL  # bot calls YOUR server
+API_BASE     = OWN_API_URL
 WEBHOOK_PATH = "/undress-webhook"
+
+if not BOT_TOKEN:
+    raise RuntimeError("BOT_TOKEN is not set in .env")
+if not OWN_API_KEY:
+    raise RuntimeError("OWN_API_KEY is not set in .env")
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  LOGGING
@@ -113,7 +124,7 @@ async def save_job(id_gen: str, chat_id: int, message_id: int, mode: str) -> Non
         await db.execute(
             "INSERT OR REPLACE INTO jobs (id_gen, chat_id, message_id, mode, status, created_at) "
             "VALUES (?, ?, ?, ?, 'pending', ?)",
-            (id_gen, chat_id, message_id, mode, datetime.utcnow().isoformat()),
+            (id_gen, chat_id, message_id, mode, datetime.now(timezone.utc).replace(tzinfo=None).isoformat()),
         )
         await db.commit()
 
